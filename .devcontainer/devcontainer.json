@@ -1,7 +1,6 @@
 {
 	"name": "SDL-Web-Test",
 	"build": {
-		"dockerfile": "Dockerfile",
-		"context": ".."
+		"dockerfile": "Dockerfile"
 	}
 }

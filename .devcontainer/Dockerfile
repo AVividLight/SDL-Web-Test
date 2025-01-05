@@ -22,29 +22,29 @@ RUN apt-get update && apt-get install -y \
     tar
 
 # Install Emscripten for WebAssembly
-RUN git clone https://github.com/emscripten-core/emsdk.git /emsdk \
-    && cd /emsdk \
-    && ./emsdk install latest \
-    && ./emsdk activate latest
+#RUN git clone https://github.com/emscripten-core/emsdk.git /emsdk \
+#    && cd /emsdk \
+#    && ./emsdk install latest \
+#    && ./emsdk activate latest
 
 # Environment setup for Emscripten
-ENV PATH="/emsdk:/emsdk/upstream/emscripten:${PATH}"
-ENV EMSDK="/emsdk"
+#ENV PATH="/emsdk:/emsdk/upstream/emscripten:${PATH}"
+#ENV EMSDK="/emsdk"
 
 # Download and compile SDL3 from source
-WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/libsdl-org/SDL.git SDL3 \
-    && cd SDL3 \
-    && mkdir build && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release \
-    && make -j$(nproc) \
-    && make install \
-    && cd /tmp \
-    && rm -rf SDL3
+#WORKDIR /tmp
+#RUN git clone --depth 1 https://github.com/libsdl-org/SDL.git SDL3 \
+#    && cd SDL3 \
+#    && mkdir build && cd build \
+#    && cmake .. -DCMAKE_BUILD_TYPE=Release \
+#    && make -j$(nproc) \
+#    && make install \
+#    && cd /tmp \
+#    && rm -rf SDL3
 
 # Copy SDL3 libs to Emscripten's system directory for WASM compilation
-RUN mkdir -p /emsdk/system/lib \
-    && cp /usr/local/lib/libSDL3* /emsdk/system/lib/
+#RUN mkdir -p /emsdk/system/lib \
+#    && cp /usr/local/lib/libSDL3* /emsdk/system/lib/
 
 # Optional: If you need SDL3_image, SDL3_mixer, SDL3_ttf, you'll need to compile these too
 # Here's an example for SDL3_image:

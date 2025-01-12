@@ -10,6 +10,14 @@ namespace {
 		SDL_Renderer* renderer = nullptr;
 		TTF_Font* font = nullptr;
 		SDL_Texture* textTexture = nullptr;
+
+		float red = 0.0f;
+		float green = 0.0f;
+		float blue = 0.0f;
+
+		/*struct Buttons {
+
+		} Buttons;*/
 	};
 }
 
@@ -60,25 +68,37 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 }
 
 
+void HandleMouseMoved(::AppState* const appstate, const SDL_MouseMotionEvent event) {
+	const double now = ((double)SDL_GetTicks()) / 1000.0;
+
+	appstate->red = (float)(0.5 + 0.5 * SDL_sin(now));
+	appstate->green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
+	appstate->blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
+
+	(void)event;
+}
+
+
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
-	if(event->type == SDL_EVENT_QUIT) {
+	switch(event->type) {
+	case SDL_EVENT_QUIT:
 		return SDL_APP_SUCCESS;
+
+	case SDL_EVENT_MOUSE_MOTION:
+		HandleMouseMoved(static_cast<::AppState*>(appstate), event->motion);
+
+	default:
+		return SDL_APP_CONTINUE;
 	}
-	return SDL_APP_CONTINUE;
 }
 
 
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
-	AppState* const state = static_cast<::AppState*>(appstate);
+	::AppState* const state = static_cast<::AppState*>(appstate);
 
-	const double now = ((double)SDL_GetTicks()) / 1000.0;
-
-	const float red = (float)(0.5 + 0.5 * SDL_sin(now));
-	const float green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-	const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-	SDL_SetRenderDrawColorFloat(state->renderer, red, green, blue, 1.0f);
+	SDL_SetRenderDrawColorFloat(state->renderer, state->red, state->green, state->blue, 1.0f);
 
 	SDL_RenderClear(state->renderer);
 

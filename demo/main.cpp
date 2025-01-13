@@ -7,26 +7,41 @@
 
 namespace {
 	constexpr unsigned char QUANTITY = 8;
-	constexpr unsigned int FLAG_HOVERED =	0b00000000'00000000'00000000'00000001;
-	constexpr unsigned int FLAG_PRESSED =	0b00000000'00000000'00000000'00000010;
-	constexpr unsigned int FLAG_DISABLED =	0b00000000'00000000'00000000'00000100;
+
+	constexpr unsigned int FLAG_NONE = 0;
+	constexpr unsigned int FLAG_VISIBLE =	0b00000000'00000000'00000000'00000001;
+	constexpr unsigned int FLAG_HOVERED =	0b00000000'00000000'00000000'00000010;
+	constexpr unsigned int FLAG_PRESSED =	0b00000000'00000000'00000000'00000100;
+	constexpr unsigned int FLAG_DISABLED =	0b00000000'00000000'00000000'00001000;
 
 	struct AppState {
-		SDL_Window* window = nullptr;
-		SDL_Renderer* renderer = nullptr;
-		TTF_Font* font = nullptr;
+		struct UIElements {
+			UIElements()
+				: X{0}
+				, Y{0}
+				, W{0}
+				, H{0}
+				, Texture{nullptr}
+				, Flags{FLAG_NONE}
+				, Index{0}
+			{
 
-		struct Text {
-			Text() : Index{0} {}
+			}
 
 
-			void AddText(const float posX, const float posY, const float sizeW, const float sizeH, SDL_Texture* const texture) {
+			[[nodiscard]] int AddText(const float posX, const float posY, const float sizeW, const float sizeH, SDL_Texture* const texture) {
 				X[Index] = posX;
 				Y[Index] = posY;
 				W[Index] = sizeW;
 				H[Index] = sizeH;
 				Texture[Index] = texture;
-				Index += 1;
+				Flags[Index] |= FLAG_VISIBLE;
+				return Index++;
+			}
+
+
+			bool PointInElement(const float x, const float y, const int index) const  {
+				return x >= X[index] && y >= Y[index] && x < X[index] + W[index] && y < Y[index] + H[index];
 			}
 
 
@@ -42,9 +57,14 @@ namespace {
 			SDL_Texture* Texture[QUANTITY];
 			unsigned int Flags[QUANTITY];
 			unsigned char Index;
-		} Text;
+		} UIElements;
 
-		unsigned char ActiveTextIndex = 0;
+		SDL_Window* window = nullptr;
+		SDL_Renderer* renderer = nullptr;
+		TTF_Font* font = nullptr;
+
+		int Text1ID = -1;
+		int Text2ID = -1;
 	};
 }
 
@@ -93,7 +113,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 		SDL_FRect dest = {100.0f, 100.0f, 0, 0};
 		SDL_GetTextureSize(texture, &dest.w, &dest.h);
-		state->Text.AddText(dest.x, dest.y, dest.w, dest.h, texture);
+		state->Text1ID = state->UIElements.AddText(dest.x, dest.y, dest.w, dest.h, texture);
 	}
 
 	{
@@ -111,9 +131,10 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 			return SDL_APP_FAILURE;
 		}
 
-		SDL_FRect dest = {100.0f, 100.0f, 0, 0};
+		SDL_FRect dest = {200.0f, 200.0f, 0, 0};
 		SDL_GetTextureSize(texture, &dest.w, &dest.h);
-		state->Text.AddText(dest.x, dest.y, dest.w, dest.h, texture);
+		state->Text2ID = state->UIElements.AddText(dest.x, dest.y, dest.w, dest.h, texture);
+		state->UIElements.Flags[state->Text2ID] &= ~FLAG_VISIBLE;
 	}
 
 	SDL_SetRenderDrawColorFloat(state->renderer, 0.20f, 0.20f, 0.20f, 1.0f);
@@ -123,15 +144,19 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 
 void HandleMouseMoved(::AppState* const state, const SDL_MouseMotionEvent event) {
-	if(event.x >= state->Text.X[0] && event.y >= state->Text.Y[0] && event.x < state->Text.X[0] + state->Text.W[0] && event.y < state->Text.Y[0] + state->Text.H[0]) {
-		if(!(state->Text.Flags[0] & FLAG_HOVERED)) {
-			state->Text.Flags[0] |= FLAG_HOVERED;
-			state->ActiveTextIndex = 1;
+	if(state->UIElements.PointInElement(event.x, event.y, 0)) {
+		if(!(state->UIElements.Flags[state->Text1ID] & FLAG_HOVERED)) {
+			state->UIElements.Flags[state->Text1ID] |= FLAG_HOVERED;
+
+			state->UIElements.Flags[state->Text1ID] &= ~FLAG_VISIBLE;
+			state->UIElements.Flags[state->Text2ID] |= FLAG_VISIBLE;
 		}
 	} else {
-		if(state->Text.Flags[0] & FLAG_HOVERED) {
-			state->Text.Flags[0] &= ~FLAG_HOVERED;
-			state->ActiveTextIndex = 0;
+		if(state->UIElements.Flags[state->Text1ID] & FLAG_HOVERED) {
+			state->UIElements.Flags[state->Text1ID] &= ~FLAG_HOVERED;
+
+			state->UIElements.Flags[state->Text1ID] |= FLAG_VISIBLE;
+			state->UIElements.Flags[state->Text2ID] &= ~FLAG_VISIBLE;
 		}
 	}
 }
@@ -156,9 +181,12 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
 	SDL_RenderClear(state->renderer);
 
-	SDL_FRect textRenderPosition = state->Text.RectAtIndex(state->ActiveTextIndex);
-	SDL_RenderTexture(state->renderer, state->Text.Texture[state->ActiveTextIndex], NULL, &textRenderPosition);
-
+	for(unsigned int index = 0; index < state->UIElements.Index; index += 1) {
+		if(state->UIElements.Flags[index] & FLAG_VISIBLE) {
+			SDL_FRect textRenderPosition = state->UIElements.RectAtIndex(index);
+			SDL_RenderTexture(state->renderer, state->UIElements.Texture[index], NULL, &textRenderPosition);
+		}
+	}
 	SDL_RenderPresent(state->renderer);
 
 	return SDL_APP_CONTINUE;
@@ -168,8 +196,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 	AppState* const state = static_cast<::AppState*>(appstate);
 	
-	while(state->Text.Index > 0) {
-		SDL_DestroyTexture(state->Text.Texture[state->Text.Index--]);
+	while(state->UIElements.Index > 0) {
+		SDL_DestroyTexture(state->UIElements.Texture[state->UIElements.Index--]);
 	}
 
 	TTF_CloseFont(state->font);

@@ -29,11 +29,11 @@ namespace {
 			}
 
 
-			[[nodiscard]] int AddText(const float posX, const float posY, const float sizeW, const float sizeH, SDL_Texture* const texture) {
+			[[nodiscard]] int AddText(const float posX, const float posY, SDL_Texture* const texture) {
 				X[Index] = posX;
 				Y[Index] = posY;
-				W[Index] = sizeW;
-				H[Index] = sizeH;
+				W[Index] = texture->w;
+				H[Index] = texture->h;
 				Texture[Index] = texture;
 				Flags[Index] |= FLAG_VISIBLE;
 				return Index++;
@@ -111,9 +111,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 			return SDL_APP_FAILURE;
 		}
 
-		SDL_FRect dest = {100.0f, 100.0f, 0, 0};
-		SDL_GetTextureSize(texture, &dest.w, &dest.h);
-		state->Text1ID = state->UIElements.AddText(dest.x, dest.y, dest.w, dest.h, texture);
+		state->Text1ID = state->UIElements.AddText(123.0f, 321.0f, texture);
 	}
 
 	{
@@ -131,9 +129,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 			return SDL_APP_FAILURE;
 		}
 
-		SDL_FRect dest = {200.0f, 200.0f, 0, 0};
-		SDL_GetTextureSize(texture, &dest.w, &dest.h);
-		state->Text2ID = state->UIElements.AddText(dest.x, dest.y, dest.w, dest.h, texture);
+		state->Text2ID = state->UIElements.AddText(200.0f, 200.0f, texture);
 		state->UIElements.Flags[state->Text2ID] &= ~FLAG_VISIBLE;
 	}
 
@@ -144,7 +140,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 
 void HandleMouseMoved(::AppState* const state, const SDL_MouseMotionEvent event) {
-	if(state->UIElements.PointInElement(event.x, event.y, 0)) {
+	if(state->UIElements.PointInElement(event.x, event.y, state->Text1ID)) {
 		if(!(state->UIElements.Flags[state->Text1ID] & FLAG_HOVERED)) {
 			state->UIElements.Flags[state->Text1ID] |= FLAG_HOVERED;
 

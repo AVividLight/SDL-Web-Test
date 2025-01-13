@@ -59,6 +59,8 @@ namespace {
 			unsigned char Index;
 		} UIElements;
 
+		SDL_Color BackgroundColor = {33, 33, 33, 255};
+
 		SDL_Window* window = nullptr;
 		SDL_Renderer* renderer = nullptr;
 		TTF_Font* font = nullptr;
@@ -90,7 +92,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 		return SDL_APP_FAILURE;
 	}
 
-	state->font = TTF_OpenFont("./IBMPlexMono-Regular.ttf", 24);
+	state->font = TTF_OpenFont("./IBMPlexMono-Regular.ttf", 36);
 	if(state->font == nullptr) {
 		SDL_Log("Couldn't open font: %s", SDL_GetError());
 		return SDL_APP_FAILURE;
@@ -98,7 +100,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 	{
 		SDL_Color textColor = {255, 255, 255};
-		SDL_Surface* const textSurface = TTF_RenderText_Solid(state->font, "Hello, world!", 0, textColor);
+		SDL_Surface* const textSurface = TTF_RenderText_LCD(state->font, "Hello, world!", 0, textColor, state->BackgroundColor);
 		if(textSurface == nullptr) {
 			SDL_Log("Couldn't render text surface! %s", SDL_GetError());
 			return SDL_APP_FAILURE;
@@ -116,7 +118,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
 	{
 		SDL_Color textColor = {255, 0, 0};
-		SDL_Surface* const textSurface = TTF_RenderText_Solid(state->font, "Hey, woah!", 0, textColor);
+		SDL_Surface* const textSurface = TTF_RenderText_LCD(state->font, "Hey, woah!", 0, textColor, state->BackgroundColor);
 		if(textSurface == nullptr) {
 			SDL_Log("Couldn't render text surface! %s", SDL_GetError());
 			return SDL_APP_FAILURE;
@@ -133,7 +135,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 		state->UIElements.Flags[state->Text2ID] &= ~FLAG_VISIBLE;
 	}
 
-	SDL_SetRenderDrawColorFloat(state->renderer, 0.20f, 0.20f, 0.20f, 1.0f);
+	SDL_SetRenderDrawColorFloat(state->renderer, state->BackgroundColor.r / 255.0f, state->BackgroundColor.g / 255.0f, state->BackgroundColor.b / 255.0f, 1.0f);
 
 	return SDL_APP_CONTINUE;
 }

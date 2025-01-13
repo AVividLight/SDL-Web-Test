@@ -8,12 +8,12 @@ namespace {
 	struct AppState {
 		SDL_Window* window = nullptr;
 		SDL_Renderer* renderer = nullptr;
-		TTF_Font* font = nullptr;
-		SDL_Texture* textTexture = nullptr;
 
-		float red = 0.0f;
-		float green = 0.0f;
-		float blue = 0.0f;
+		TTF_Font* font = nullptr;
+		SDL_Texture* textTextureNormal = nullptr;
+		SDL_Texture* textTextureHovered = nullptr;
+		SDL_Texture** activeTextTexture = nullptr;
+
 
 		/*struct Buttons {
 
@@ -50,18 +50,38 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 		return SDL_APP_FAILURE;
 	}
 
-	SDL_Color textColor = {255, 255, 255};
-	SDL_Surface* const textSurface = TTF_RenderText_Solid(state->font, "Hello, world!", 0, textColor);
-	if(textSurface == nullptr) {
-		SDL_Log("Couldn't render text surface! %s", SDL_GetError());
-		return SDL_APP_FAILURE;
+	{
+		SDL_Color textColor = {255, 255, 255};
+		SDL_Surface* const textSurface = TTF_RenderText_Solid(state->font, "Hello, world!", 0, textColor);
+		if(textSurface == nullptr) {
+			SDL_Log("Couldn't render text surface! %s", SDL_GetError());
+			return SDL_APP_FAILURE;
+		}
+
+		state->textTextureNormal = SDL_CreateTextureFromSurface(state->renderer, textSurface);
+		SDL_DestroySurface(textSurface);
+		if(state->textTextureNormal == nullptr) {
+			SDL_Log("Failed creating texture from rendered text! %s", SDL_GetError());
+			return SDL_APP_FAILURE;
+		}
+
+		state->activeTextTexture = &state->textTextureNormal;
 	}
 
-	state->textTexture = SDL_CreateTextureFromSurface(state->renderer, textSurface);
-	SDL_DestroySurface(textSurface);
-	if(state->textTexture == nullptr) {
-		SDL_Log("Failed creating texture from rendered text! %s", SDL_GetError());
-		return SDL_APP_FAILURE;
+	{
+		SDL_Color textColor = {255, 0, 0};
+		SDL_Surface* const textSurface = TTF_RenderText_Solid(state->font, "Hey there!", 0, textColor);
+		if(textSurface == nullptr) {
+			SDL_Log("Couldn't render text surface! %s", SDL_GetError());
+			return SDL_APP_FAILURE;
+		}
+
+		state->textTextureHovered = SDL_CreateTextureFromSurface(state->renderer, textSurface);
+		SDL_DestroySurface(textSurface);
+		if(state->textTextureHovered == nullptr) {
+			SDL_Log("Failed creating texture from rendered text! %s", SDL_GetError());
+			return SDL_APP_FAILURE;
+		}
 	}
 
 	return SDL_APP_CONTINUE;
@@ -69,13 +89,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 
 
 void HandleMouseMoved(::AppState* const appstate, const SDL_MouseMotionEvent event) {
-	const double now = ((double)SDL_GetTicks()) / 1000.0;
-
-	appstate->red = (float)(0.5 + 0.5 * SDL_sin(now));
-	appstate->green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-	appstate->blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-
-	(void)event;
+	//if mouse is over text region, change activeTextTexture to textTextureHovered otherwise otherwise set to textTextureNormal
 }
 
 
@@ -98,13 +112,13 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 {
 	::AppState* const state = static_cast<::AppState*>(appstate);
 
-	SDL_SetRenderDrawColorFloat(state->renderer, state->red, state->green, state->blue, 1.0f);
+	SDL_SetRenderDrawColorFloat(state->renderer, 0.33f, 0.33f, 0.33f, 1.0f);
 
 	SDL_RenderClear(state->renderer);
 
 	SDL_FRect dest = {100.0f, 100.0f, 0, 0};
-	SDL_GetTextureSize(state->textTexture, &dest.w, &dest.h);
-	SDL_RenderTexture(state->renderer, state->textTexture, nullptr, &dest);
+	SDL_GetTextureSize(*state->activeTextTexture, &dest.w, &dest.h);
+	SDL_RenderTexture(state->renderer, *state->activeTextTexture, nullptr, &dest);
 
 	SDL_RenderPresent(state->renderer);
 
@@ -116,7 +130,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
 	AppState* const state = static_cast<::AppState*>(appstate);
 	
-	SDL_DestroyTexture(state->textTexture);
+	SDL_DestroyTexture(state->textTextureNormal);
 	TTF_CloseFont(state->font);
 	TTF_Quit();
 	SDL_DestroyRenderer(state->renderer);

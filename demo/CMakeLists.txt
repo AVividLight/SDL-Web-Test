@@ -34,6 +34,6 @@ FetchContent_MakeAvailable(SDL_TTF)
 set_property(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/_deps/sdl_ttf-src" PROPERTY EXCLUDE_FROM_ALL TRUE)
 
 
-add_executable(demo main.cpp)
+add_executable(demo UIElement.cpp main.cpp)
 
 target_link_libraries(demo PRIVATE SDL3::SDL3-static SDL3_ttf::SDL3_ttf-static)

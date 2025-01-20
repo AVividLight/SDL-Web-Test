@@ -17,11 +17,11 @@ namespace {
 	struct AppState {
 		struct UIElements {
 			UIElements()
-				: X{0}
+				: Texture{nullptr}
+				, X{0}
 				, Y{0}
 				, W{0}
 				, H{0}
-				, Texture{nullptr}
 				, Flags{FLAG_NONE}
 				, Index{0}
 			{
@@ -40,21 +40,21 @@ namespace {
 			}
 
 
-			bool PointInElement(const float x, const float y, const int index) const  {
+			[[nodiscard]] bool PointInElement(const float x, const float y, const int index) const  {
 				return x >= X[index] && y >= Y[index] && x < X[index] + W[index] && y < Y[index] + H[index];
 			}
 
 
-			SDL_FRect RectAtIndex(const unsigned char index) const {
+			[[nodiscard]] SDL_FRect RectAtIndex(const unsigned char index) const {
 				return {X[index], Y[index], W[index], H[index]};
 			}
 
 
+			SDL_Texture* Texture[QUANTITY];
 			float X[QUANTITY];
 			float Y[QUANTITY];
 			float W[QUANTITY];
 			float H[QUANTITY];
-			SDL_Texture* Texture[QUANTITY];
 			unsigned int Flags[QUANTITY];
 			unsigned char Index;
 		} UIElements;

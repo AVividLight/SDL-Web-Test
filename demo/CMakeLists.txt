@@ -49,4 +49,4 @@ set_property(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/_deps/sdl_ttf-src" PROPERTY 
 
 add_executable(demo main.cpp)
 
-target_link_libraries(demo PRIVATE SDL3::SDL3-static SDL3_ttf::SDL3_ttf-static)
+target_link_libraries(demo PRIVATE SDL3::SDL3-static SDL3_image::SDL3_image-static SDL3_ttf::SDL3_ttf-static)

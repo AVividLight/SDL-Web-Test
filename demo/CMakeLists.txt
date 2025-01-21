@@ -12,12 +12,25 @@ message("Fetching SDL3...")
 FetchContent_Declare(
 	SDL
 	GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-	GIT_TAG preview-3.1.6
+	GIT_TAG prerelease-3.1.10
 	GIT_SHALLOW TRUE
 	GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(SDL)
 set_property(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/_deps/sdl-src" PROPERTY EXCLUDE_FROM_ALL TRUE)
+
+message("Fetching SDL3 Image...")
+set(SDL_SHARED FALSE CACHE BOOL "Prefer static linking")
+set(SDL_STATIC TRUE CACHE BOOL "Build a SDL static library (if available)")
+FetchContent_Declare(
+	SDL_Image
+	GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
+	GIT_TAG preview-3.1.0
+	GIT_SHALLOW TRUE
+	GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(SDL_Image)
+set_property(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/_deps/sdl_image-src" PROPERTY EXCLUDE_FROM_ALL TRUE)
 
 message("Fetching SDL3 TTF...")
 set(SDL_SHARED FALSE CACHE BOOL "Prefer static linking")
@@ -26,7 +39,7 @@ set(SDLTTF_VENDORED TRUE)
 FetchContent_Declare(
 	SDL_TTF
 	GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-	GIT_TAG baf2e577b109ac5547f5654550626256c27f2541
+	GIT_TAG dc487bc51e78c50b2a16e2bab0b5c0d72367defb
 	GIT_SHALLOW TRUE
 	GIT_PROGRESS TRUE
 )
